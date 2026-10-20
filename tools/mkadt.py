@@ -10,8 +10,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import adt  # noqa: E402
 
 # Kernel-managed RAM: above every Qualcomm XPU carve-out (see NOTES.md)
-PHYS_BASE = 0xb0000000
-MEM_SIZE = 0x4d000000
+PHYS_BASE = int(__import__('os').environ.get('PHYSBASE','0xb0000000'),16)
+MEM_SIZE = int(__import__('os').environ.get('MEMSIZE','0x4d000000'),16)
 # --highmem (phone only): the whole upper DDR bank. The topaz live FDT memory
 # node is <0x40000000 0x3bb00000>, <0x80000000 3G>, <0x1_40000000 4G>; every
 # fixed reserved-memory carve-out is below 0x63900000 and the dynamic pools are
@@ -32,7 +32,7 @@ GICR, GICR_SIZE = 0x0f300000, 0x100000
 # cont_splash_region left lit by ABL
 FB, FB_SIZE = 0x5c000000, 0xf00000
 SWEET_ECID = 0x544f50415a000001  # 'TOPAZ' + 1, synthetic
-FB_W, FB_H, FB_STRIDE = 1080, 2400, 1080 * 4
+FB_W, FB_H, FB_STRIDE = (1200, 2000, 1200 * 4) if __import__('os').environ.get('GTA4L') else (1080, 2400, 1080 * 4)
 # Internal UFS host (ufshc@4804000 "ufs_mem"); QEMU virt has none
 UFS, UFS_SIZE = 0x04804000, 0x3000
 TIMEBASE = 19200000
@@ -250,7 +250,7 @@ def build(seed=None, qemu=False, highmem=False, native=False, midmem=False):
         ('manufacturer', cstr('Apple Inc.')),
         ('#address-cells', u32(2)),
         ('#size-cells', u32(2)),
-    ], [chosen, defaults, cpus, arm_io, fbcon, buttons] + product + ([] if qemu else [ufs]))
+    ], [chosen, defaults, cpus, arm_io, fbcon, buttons] + product + ([] if (qemu or __import__('os').environ.get('GTA4L')) else [ufs]))
 
 
 if __name__ == '__main__':
